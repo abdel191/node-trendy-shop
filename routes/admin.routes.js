@@ -1,6 +1,6 @@
 import express from "express";
 import upload from "../lib/upload.js";
-import { adminStats } from "../controllers/adminController.js";
+
 import {
   adminDashboard,
   createProductForm,
@@ -12,29 +12,30 @@ import {
   adminOrderDetails,
   adminUsers,
   toggleAdmin,
-  adminCategories,
-  createCategory,
-  createCategoryForm,
+  adminStats,
 } from "../controllers/adminController.js";
+
+import {
+  adminCategories,
+  createCategoryForm,
+  createCategory,
+} from "../controllers/categoryController.js";
 
 import { requireAuth } from "../middlewares/auth.middleware.js";
 import { requireAdmin } from "../middlewares/admin.middleware.js";
 
 const router = express.Router();
-
 /* ==========================
-   DASHBOARD ADMIN
+   DASHBOARD
 ========================== */
 router.get("/", requireAuth, requireAdmin, adminDashboard);
+router.get("/stats", requireAuth, requireAdmin, adminStats);
 
 /* ==========================
    PRODUITS
 ========================== */
-
-// ➕ FORMULAIRE CRÉATION
 router.get("/products/new", requireAuth, requireAdmin, createProductForm);
 
-// ➕ CRÉATION (UPLOAD IMAGE)
 router.post(
   "/products/new",
   requireAuth,
@@ -43,10 +44,8 @@ router.post(
   createProduct
 );
 
-// ✏️ FORMULAIRE ÉDITION
 router.get("/products/:id/edit", requireAuth, requireAdmin, editProductForm);
 
-// ✏️ MISE À JOUR (UPLOAD IMAGE OPTIONNEL)
 router.post(
   "/products/:id/edit",
   requireAuth,
@@ -55,32 +54,25 @@ router.post(
   updateProduct
 );
 
-// 🗑️ SUPPRESSION
 router.post("/products/:id/delete", requireAuth, requireAdmin, deleteProduct);
 
 /* ==========================
    COMMANDES
 ========================== */
-
-// 📦 LISTE
 router.get("/orders", requireAuth, requireAdmin, adminOrders);
-
-// 🔍 DÉTAIL
 router.get("/orders/:id", requireAuth, requireAdmin, adminOrderDetails);
 
 /* ==========================
    UTILISATEURS
 ========================== */
-
 router.get("/users", requireAuth, requireAdmin, adminUsers);
-
 router.post("/users/:id/toggle-admin", requireAuth, requireAdmin, toggleAdmin);
 
-router.get("/stats", requireAuth, requireAdmin, adminStats);
-
-// 📂 Catégories
+/* ==========================
+   CATEGORIES ✅
+========================== */
 router.get("/categories", requireAuth, requireAdmin, adminCategories);
-router.post("/categories", requireAuth, requireAdmin, createCategory);
-router.post("/categories/new", requireAuth, requireAdmin, createCategory);
 router.get("/categories/new", requireAuth, requireAdmin, createCategoryForm);
+router.post("/categories/new", requireAuth, requireAdmin, createCategory);
+
 export default router;
