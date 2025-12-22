@@ -48,20 +48,21 @@
           />
         </div>
         <!-- CATÉGORIE -->
+
         <div>
           <label class="block font-semibold mb-1">Catégorie</label>
           <select
             name="categoryId"
             required
-            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300"
+            class="w-full border rounded px-3 py-2"
           >
-            <option value="">-- Choisir une catégorie --</option>
-
-            <% categories.forEach(category => { %>
-            <option value="<%= category.id %>"><%= category.name %></option>
+            <option value="">-- Choisir --</option>
+            <% categories.forEach(cat => { %>
+            <option value="<%= cat.id %>"><%= cat.name %></option>
             <% }) %>
           </select>
         </div>
+
         <!-- STOCK -->
         <div>
           <label class="block font-semibold mb-1">Stock disponible</label>

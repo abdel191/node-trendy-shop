@@ -38,9 +38,7 @@ export const adminDashboard = async (req, res) => {
 ===================================================== */
 
 export const createProductForm = async (req, res) => {
-  const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
-  });
+  const categories = await prisma.category.findMany();
 
   res.render("admin/create", {
     user: req.session.user,
@@ -316,4 +314,29 @@ export const adminStats = async (req, res) => {
       message: "Erreur lors du chargement des statistiques",
     });
   }
+};
+/* ==========================
+   CATEGORIES
+========================== */
+export const adminCategories = async (req, res) => {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
+
+  res.render("admin/categories", {
+    user: req.session.user,
+    categories,
+  });
+};
+
+export const createCategory = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) return res.redirect("/admin/categories");
+
+  await prisma.category.create({
+    data: { name },
+  });
+
+  res.redirect("/admin/categories");
 };

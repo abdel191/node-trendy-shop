@@ -12,6 +12,8 @@ import {
   adminOrderDetails,
   adminUsers,
   toggleAdmin,
+  adminCategories,
+  createCategory,
 } from "../controllers/adminController.js";
 
 import { requireAuth } from "../middlewares/auth.middleware.js";
@@ -74,4 +76,9 @@ router.get("/users", requireAuth, requireAdmin, adminUsers);
 router.post("/users/:id/toggle-admin", requireAuth, requireAdmin, toggleAdmin);
 
 router.get("/stats", requireAuth, requireAdmin, adminStats);
+
+// 📂 Catégories
+router.get("/categories", requireAuth, requireAdmin, adminCategories);
+router.post("/categories", requireAuth, requireAdmin, createCategory);
+
 export default router;
