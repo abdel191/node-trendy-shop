@@ -1,7 +1,7 @@
 // controllers/webhookController.js
 import Stripe from "stripe";
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../lib/prisma.js";
 import {
   sendClientOrderEmail,
   sendAdminOrderEmail,
@@ -10,7 +10,7 @@ import {
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const prisma = new PrismaClient();
+//const prisma = new PrismaClient();
 
 /* ===========================
    STRIPE WEBHOOK
