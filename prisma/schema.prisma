@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  addresses Address[]
+  reviews   Review[]
+  cart      Cart?
+  orders    Order[]
+   resetToken          String?
+  resetTokenExpires   DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  stock       Int
+  imageUrl    String
+  createdAt   DateTime  @default(now())
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  reviews     Review[]
+  cartItems   CartItem[]
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+}
+
+model Order {
+  id              Int       @id @default(autoincrement())
+  customerName    String
+  customerEmail   String
+  address         String
+  status          String   @default("En préparation")
+  totalAmount     Float
+  trackingCode    String   @unique
+  estimatedDelivery DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  orderItems      OrderItem[]
+  statusHistory   OrderStatusHistory[]
+   userId          Int?
+  user            User?    @relation(fields: [userId], references: [id])
+  payment         Payment? @relation
+  
+}
+model OrderStatusHistory {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  status    String
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Float
+  method    String   // stripe, paypal...
+  status    String   // completed, failed
+  stripeSessionId  String?
+  paypalOrderId    String?
+  createdAt DateTime @default(now())
+}
+model Address {
+  id        Int     @id @default(autoincrement())
+  street    String
+  city      String
+  country   String
+  zipCode   String
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+}
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // de 1 à 5
+  comment   String
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+}
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int ?       @unique
+  user      User ?      @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  sessionId String? @unique
+  createdAt DateTime   @default(now())
+
+}
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+}
+

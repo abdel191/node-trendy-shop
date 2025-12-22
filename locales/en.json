@@ -1,0 +1,9 @@
+{
+  "menu.home": "Home",
+  "menu.products": "Products",
+  "menu.about": "About",
+  "menu.contact": "Contact",
+  "menu.dashboard": "Dashboard",
+  "menu.logout": "Logout",
+  "hello": "Hello"
+}

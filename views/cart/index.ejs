@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mon Panier - TrendyShop</title>
+
+    <!-- Tailwind -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    />
+
+    <!-- FontAwesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <h1 class="text-3xl font-bold mb-6 text-center">🛒 Mon Panier</h1>
+
+      <% if (cartItems && cartItems.length > 0) { %>
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full text-sm text-left">
+          <thead class="bg-indigo-600 text-white">
+            <tr>
+              <th class="py-3 px-4">Produit</th>
+              <th class="py-3 px-4">Prix</th>
+              <th class="py-3 px-4">Quantité</th>
+              <th class="py-3 px-4">Total</th>
+              <th class="py-3 px-4 text-center">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% cartItems.forEach(item => { %>
+            <tr class="border-b hover:bg-gray-50">
+              <!-- PRODUIT -->
+              <td class="py-3 px-4 flex items-center gap-3">
+                <% if (item.product?.imageUrl) { %>
+                <img
+                  src="<%= item.product.imageUrl %>"
+                  alt="<%= item.product.name %>"
+                  class="w-12 h-12 rounded object-cover"
+                />
+                <% } %>
+
+                <span><%= item.product?.name || "Produit inconnu" %></span>
+              </td>
+
+              <!-- PRIX -->
+              <td class="py-3 px-4">
+                <%= item.product?.price ? item.product.price.toFixed(2) : "0.00"
+                %> €
+              </td>
+
+              <!-- QUANTITÉ avec boutons + / - -->
+              <td class="py-3 px-4 flex items-center gap-3">
+                <!-- BTN - -->
+                <form action="/cart/decrease/<%= item.id %>" method="POST">
+                  <button
+                    class="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
+                  >
+                    −
+                  </button>
+                </form>
+
+                <span class="font-semibold"><%= item.quantity %></span>
+
+                <!-- BTN + -->
+                <form action="/cart/increase/<%= item.id %>" method="POST">
+                  <button
+                    class="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
+                  >
+                    +
+                  </button>
+                </form>
+              </td>
+
+              <!-- TOTAL -->
+              <td class="py-3 px-4">
+                <%= item.product?.price ? (item.quantity *
+                item.product.price).toFixed(2) : "0.00" %> €
+              </td>
+
+              <!-- ACTION : SUPPRIMER -->
+              <td class="py-3 px-4 text-center">
+                <form
+                  action="/cart/remove/<%= item.id %>"
+                  method="POST"
+                  onsubmit="return confirm('Supprimer cet article ?');"
+                >
+                  <button
+                    class="text-red-600 hover:text-red-800 text-xl"
+                    title="Retirer du panier"
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TOTAL GÉNÉRAL -->
+      <div class="flex justify-between items-center mt-6">
+        <h2 class="text-xl font-semibold">
+          Total : <%= cartItems.reduce((sum, item) => sum + (item.product?.price
+          || 0) * item.quantity, 0).toFixed(2) %> €
+        </h2>
+
+        <form action="/checkout/checkout-cart" method="get">
+          <button
+            type="submit"
+            class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition"
+          >
+            Acheter maintenant
+          </button>
+        </form>
+      </div>
+
+      <% } else { %>
+      <div class="text-center py-10">
+        <p class="text-lg text-gray-600">Votre panier est vide 😢</p>
+        <a href="/" class="text-indigo-600 hover:underline mt-4 block">
+          ← Retour à la boutique
+        </a>
+      </div>
+      <% } %>
+    </div>
+  </body>
+</html>

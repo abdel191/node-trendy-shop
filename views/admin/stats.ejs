@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Statistiques – Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-gray-100 min-h-screen">
+    <%- include("../partials/header") %>
+
+    <div class="container mx-auto px-4 py-10">
+      <h1 class="text-3xl font-bold mb-8">📊 Statistiques de vente</h1>
+
+      <div class="grid md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-white p-6 rounded shadow text-center">
+          <p class="text-gray-500">💰 Revenu total</p>
+          <p class="text-3xl font-bold text-green-600">
+            €<%= stats.totalRevenue.toFixed(2) %>
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow text-center">
+          <p class="text-gray-500">📦 Commandes</p>
+          <p class="text-3xl font-bold"><%= stats.totalOrders %></p>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow text-center">
+          <p class="text-gray-500">🛒 Produits vendus</p>
+          <p class="text-3xl font-bold"><%= stats.totalProductsSold %></p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded shadow text-center">
+          <p class="text-gray-500">📆 Revenu (7 jours)</p>
+          <p class="text-2xl font-bold text-indigo-600">
+            €<%= stats.revenue7Days.toFixed(2) %>
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow text-center">
+          <p class="text-gray-500">📆 Revenu (30 jours)</p>
+          <p class="text-2xl font-bold text-purple-600">
+            €<%= stats.revenue30Days.toFixed(2) %>
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <a href="/admin" class="text-indigo-600 hover:underline">
+          ← Retour dashboard admin
+        </a>
+      </div>
+    </div>
+
+    <%- include("../partials/footer") %>
+  </body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ajouter un produit – Admin | TrendyShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-gray-100 min-h-screen">
+    <!-- HEADER -->
+    <%- include("../partials/header") %>
+
+    <div class="container mx-auto px-4 py-10 max-w-xl">
+      <!-- TITRE -->
+      <h1 class="text-3xl font-bold mb-6 text-center">
+        ➕ Ajouter un nouveau produit
+      </h1>
+
+      <!-- FORMULAIRE -->
+      <form
+        action="/admin/products/new"
+        method="POST"
+        enctype="multipart/form-data"
+        class="bg-white p-6 rounded shadow space-y-5"
+      >
+        <!-- NOM -->
+        <div>
+          <label class="block font-semibold mb-1">Nom du produit</label>
+          <input
+            type="text"
+            name="name"
+            placeholder="Ex : Casque Bluetooth"
+            required
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300"
+          />
+        </div>
+
+        <!-- PRIX -->
+        <div>
+          <label class="block font-semibold mb-1">Prix (€)</label>
+          <input
+            type="number"
+            name="price"
+            step="0.01"
+            placeholder="Ex : 49.99"
+            required
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300"
+          />
+        </div>
+        <!-- CATÉGORIE -->
+        <div>
+          <label class="block font-semibold mb-1">Catégorie</label>
+          <select
+            name="categoryId"
+            required
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300"
+          >
+            <option value="">-- Choisir une catégorie --</option>
+
+            <% categories.forEach(category => { %>
+            <option value="<%= category.id %>"><%= category.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <!-- STOCK -->
+        <div>
+          <label class="block font-semibold mb-1">Stock disponible</label>
+          <input
+            type="number"
+            name="stock"
+            min="0"
+            placeholder="Ex : 100"
+            required
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300"
+          />
+        </div>
+
+        <!-- IMAGE -->
+        <div>
+          <label class="block font-semibold mb-1">Image du produit</label>
+          <input
+            type="file"
+            name="image"
+            accept="image/png, image/jpeg, image/webp"
+            required
+            class="w-full border rounded px-3 py-2 bg-white"
+          />
+          <p class="text-sm text-gray-500 mt-1">
+            Formats acceptés : JPG, PNG, WEBP
+          </p>
+        </div>
+        <!-- DESCRIPTION -->
+        <div>
+          <label class="block font-semibold mb-1">Description</label>
+          <textarea
+            name="description"
+            rows="4"
+            required
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-indigo-300"
+            placeholder="Description du produit"
+          ></textarea>
+        </div>
+
+        <!-- BOUTONS -->
+        <div class="flex justify-between items-center pt-4">
+          <a href="/admin" class="text-gray-600 hover:underline">
+            ← Retour dashboard
+          </a>
+
+          <button
+            type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded font-semibold"
+          >
+            ➕ Créer le produit
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <%- include("../partials/footer") %>
+  </body>
+</html>

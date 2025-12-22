@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Achat immédiat - <%= product.name %></title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+ <%- include("../partials/header") %>
+  <body class="bg-gray-100 pb-16">
+    <div class="container mx-auto px-4 py-10">
+      <h1 class="text-3xl font-bold text-center mb-8">
+        Achat immédiat : <%= product.name %>
+      </h1>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Produit -->
+        <div class="bg-white p-6 rounded shadow">
+          <h2 class="text-xl font-semibold mb-4">Détails du produit</h2>
+
+          <div class="flex items-center gap-4">
+            <% if (product.imageUrl) { %>
+            <img
+              src="<%= product.imageUrl %>"
+              class="w-28 h-28 rounded object-cover shadow"
+              alt="<%= product.name %>"
+            />
+            <% } %>
+
+            <div>
+              <p class="font-semibold text-lg"><%= product.name %></p>
+              <p class="text-gray-700 text-md font-bold mt-2">
+                Prix : <%= product.price.toFixed(2) %> €
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-6 border-t pt-4 text-lg font-bold">
+            Total : <%= product.price.toFixed(2) %> €
+          </div>
+        </div>
+
+        <!-- FORMULAIRE CLIENT -->
+        <div class="bg-white p-6 rounded shadow">
+          <h2 class="text-xl font-semibold mb-4">Informations de livraison</h2>
+
+          <form action="/checkout/checkout-single-product" method="POST">
+            <!-- Infos produit -->
+            <input type="hidden" name="id" value="<%= product.id %>" />
+            <input type="hidden" name="name" value="<%= product.name %>" />
+            <input type="hidden" name="price" value="<%= product.price %>" />
+            <input type="hidden" name="quantity" value="1" />
+
+            <!-- Champs client -->
+            <label class="block mb-2">Nom complet :</label>
+            <input
+              type="text"
+              name="customerName"
+              required
+              class="w-full border p-2 rounded mb-4"
+            />
+
+            <label class="block mb-2">Email :</label>
+            <input
+              type="email"
+              name="email"
+              required
+              class="w-full border p-2 rounded mb-4"
+            />
+
+            <label class="block mb-2">Adresse :</label>
+            <input
+              type="text"
+              name="address"
+              required
+              class="w-full border p-2 rounded mb-4"
+            />
+
+            <label class="block mb-2">Ville :</label>
+            <input
+              type="text"
+              name="city"
+              required
+              class="w-full border p-2 rounded mb-4"
+            />
+
+            <label class="block mb-2">Code postal :</label>
+            <input
+              type="text"
+              name="postalCode"
+              required
+              class="w-full border p-2 rounded mb-4"
+            />
+
+            <label class="block mb-2">Pays :</label>
+            <input
+              type="text"
+              name="country"
+              required
+              class="w-full border p-2 rounded mb-6"
+            />
+
+            <!-- Submit -->
+            <button
+              class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 w-full text-lg"
+            >
+              Procéder au paiement →
+            </button>
+
+            <form action="/checkout/paypal-single-start" method="POST">
+              <input type="hidden" name="productId" value="<%= product.id %>" />
+              <button
+                class="bg-yellow-500 text-white py-2 px-4 rounded mt-4 w-full"
+              >
+                Payer avec PayPal
+              </button>
+            </form>
+          </form>
+
+          <a
+            href="/"
+            class="block text-center text-indigo-600 hover:underline mt-4"
+            >← Retour à la boutique</a
+          >
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

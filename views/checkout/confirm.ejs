@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Confirmation de commande</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+ <%- include("../partials/header") %>
+  <body class="bg-gray-100 pb-16">
+    <div class="container mx-auto px-4 py-10">
+      <h1 class="text-3xl font-bold text-center mb-8">
+        🧾 Confirmation de votre commande
+      </h1>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- 🛍️ Produits -->
+        <div class="bg-white p-6 rounded shadow">
+          <h2 class="text-xl font-semibold mb-4">Vos articles</h2>
+
+          <% cartItems.forEach(item => { %>
+          <div class="flex justify-between border-b py-3">
+            <div>
+              <p class="font-semibold"><%= item.product.name %></p>
+              <p class="text-gray-600 text-sm">
+                Quantité : <%= item.quantity %>
+              </p>
+            </div>
+
+            <p class="font-semibold">
+              <%= (item.product.price * item.quantity).toFixed(2) %> €
+            </p>
+          </div>
+          <% }) %>
+
+          <div class="flex justify-between mt-4 text-lg font-bold">
+            <span>Total :</span>
+            <span><%= totalAmount.toFixed(2) %> €</span>
+          </div>
+        </div>
+
+        <!-- 👤 Informations client -->
+        <div class="bg-white p-6 rounded shadow">
+          <h2 class="text-xl font-semibold mb-4">Informations de livraison</h2>
+
+          <div class="space-y-2 text-gray-700">
+            <p><strong>Nom :</strong> <%= customer.name %></p>
+            <p><strong>Adresse :</strong> <%= customer.address %></p>
+            <p><strong>Ville :</strong> <%= customer.city %></p>
+            <p><strong>Code postal :</strong> <%= customer.zip %></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA vers Stripe -->
+      <div class="text-center mt-10">
+        <form action="/checkout/create-checkout-session" method="POST">
+          <button
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg shadow transition"
+          >
+            💳 Procéder au paiement sécurisé
+          </button>
+        </form>
+
+        <a
+          href="/cart"
+          class="inline-block mt-4 text-indigo-600 hover:underline text-sm"
+        >
+          ← Retour au panier
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

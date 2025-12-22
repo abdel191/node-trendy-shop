@@ -1,0 +1,135 @@
+<!-- HEADER -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trendyshop - Votre boutique en ligne</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+
+  <style>
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<nav class="bg-white shadow-md sticky top-0 z-50">
+  <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <!-- LOGO -->
+    <a href="/" class="text-2xl font-bold text-indigo-600"> TrendyShop </a>
+
+    <!-- MENU -->
+    <div class="hidden md:flex space-x-8">
+      <a href="/" class="text-gray-700 hover:text-indigo-600">
+        <%= __("menu.home") %>
+      </a>
+      <a href="/" class="text-gray-700 hover:text-indigo-600">
+        <%= __("menu.products") %>
+      </a>
+      <a href="/" class="text-gray-700 hover:text-indigo-600">
+        <%= __("menu.about") %>
+      </a>
+      <a href="/" class="text-gray-700 hover:text-indigo-600">
+        <%= __("menu.contact") %>
+      </a>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="flex items-center space-x-4">
+      <!-- PANIER -->
+      <a href="/cart" class="relative text-gray-700 hover:text-indigo-600">
+        <i class="fas fa-shopping-cart text-xl"></i>
+
+        <!-- badge (ton css) -->
+        <span class="cart-badge"><%= cartCount || 0 %></span>
+      </a>
+
+      <!-- UTILISATEUR -->
+      <% if (!session?.user) { %>
+      <a href="/connexion" class="text-gray-700 hover:text-indigo-600">
+        <i class="fas fa-user text-xl"></i>
+      </a>
+      <% } else { %> <% if (session.user.isAdmin) { %>
+      <a href="/admin" class="text-red-600 font-semibold">Admin</a>
+      <% } %>
+
+      <div class="flex items-center gap-3 text-sm">
+        <span class="font-semibold text-gray-700">
+          <%= __("hello") %> <%= session.user.name %>
+        </span>
+
+        <a href="/dashboard" class="text-indigo-600 hover:underline">
+          <%= __("menu.dashboard") %>
+        </a>
+
+        <a href="/connexion/logout" class="text-red-600 hover:underline">
+          <%= __("menu.logout") %>
+        </a>
+      </div>
+      <% } %>
+
+      
+      <!-- LANGUE -->
+      <div class="relative">
+        <button
+          id="langBtn"
+          class="text-gray-700 hover:text-indigo-600 flex items-center gap-1"
+        >
+          <i class="fas fa-globe text-xl"></i>
+          <span class="text-sm uppercase"><%= currentLang %></span>
+        </button>
+
+        <div
+          id="langMenu"
+          class="absolute right-0 mt-2 w-36 bg-white shadow-lg rounded hidden z-50"
+        >
+          <a href="/lang/fr" class="block px-4 py-2 hover:bg-gray-100"
+            >🇫🇷 Français</a
+          >
+          <a href="/lang/en" class="block px-4 py-2 hover:bg-gray-100"
+            >🇬🇧 English</a
+          >
+          <a href="/lang/de" class="block px-4 py-2 hover:bg-gray-100"
+            >🇩🇪 Deutsch</a
+          >
+          <a href="/lang/it" class="block px-4 py-2 hover:bg-gray-100"
+            >🇮🇹 Italiano</a
+          >
+        </div>
+      </div>
+
+      <script>
+        const langBtn = document.getElementById("langBtn");
+        const langMenu = document.getElementById("langMenu");
+
+        langBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          langMenu.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", () => {
+          langMenu.classList.add("hidden");
+        });
+      </script>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,17 @@
+# Node
+node_modules
+.env
+
+# Uploads
+/uploads
+
+# Prisma generated
+generated/
+prisma/client.js
+prisma/query_engine*
+prisma/runtime*
+prisma/*.node
+
+# OS
+.DS_Store
+Thumbs.db

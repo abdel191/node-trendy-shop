@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mon Panier</title>
+  </head>
+  <%- include("../partials/header") %>
+  <body>
+    <h1>Mon panier</h1>
+    <ul id="cart-items"></ul>
+
+    <script>
+      async function loadCart(userId) {
+        const response = await fetch(`/api/cart/${userId}`);
+        const cart = await response.json();
+
+        const cartItems = document.getElementById("cart-items");
+        cart.items.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = `${item.product.name} x ${item.quantity} - ${item.product.price}€`;
+          cartItems.appendChild(li);
+        });
+      }
+
+      loadCart(1); // Remplace 1 par l'ID de l'utilisateur connecté
+    </script>
+  </body>
+  <%- include("../partials/footer") %>
+</html>

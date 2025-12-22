@@ -1,0 +1,71 @@
+<%- include("../partials/header") %>
+<h1>Nos produits</h1>
+
+<% products.forEach(product => { %>
+<div class="product border p-3 mb-3 rounded">
+  <h3><%= product.name %></h3>
+  <p><%= product.description %></p>
+  <p><strong><%= product.price %> €</strong></p>
+
+  <!-- Ajouter au panier -->
+  <form action="/cart/add" method="POST" style="display: inline">
+    <input type="hidden" name="id" value="<%= product.id %>" />
+    <input type="hidden" name="name" value="<%= product.name %>" />
+    <input type="hidden" name="price" value="<%= product.price %>" />
+    <input type="hidden" name="quantity" value="1" />
+    <button
+      type="submit"
+      class="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 transition"
+    >
+      <i class="fas fa-shopping-cart"></i>
+    </button>
+  </form>
+
+  <!-- Achat immédiat -->
+  <form
+    action="/checkout-single"
+    method="POST"
+    style="display: inline; margin-left: 10px"
+  >
+    <input type="hidden" name="id" value="<%= product.id %>" />
+    <input type="hidden" name="name" value="<%= product.name %>" />
+    <input type="hidden" name="price" value="<%= product.price %>" />
+    <input type="hidden" name="quantity" value="1" />
+
+    <!-- Infos utilisateur -->
+    <input
+      type="text"
+      name="customerName"
+      value="<%= user ? user.name : '' %>"
+    />
+    <input type="hidden" name="email" value="<%= user ? user.email : '' %>" />
+    <input
+      type="text"
+      name="address"
+      value="<%= user && user.addresses[0] ? user.addresses[0].street : '' %>"
+    />
+    <input
+      type="text"
+      name="city"
+      value="<%= user && user.addresses[0] ? user.addresses[0].city : '' %>"
+    />
+    <input
+      type="text"
+      name="postalCode"
+      value="<%= user && user.addresses[0] ? user.addresses[0].zipCode : '' %>"
+    />
+    <input
+      type="text"
+      name="country"
+      value="<%= user && user.addresses[0] ? user.addresses[0].country : '' %>"
+    />
+
+    <button
+      type="submit"
+      class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-sm"
+    >
+      Acheter
+    </button>
+  </form>
+</div>
+<% }) %> <%- include("../partials/footer") %>
