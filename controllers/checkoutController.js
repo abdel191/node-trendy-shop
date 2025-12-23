@@ -259,3 +259,74 @@ export const paymentCancel = (req, res) => {
     message: "⚠️ Paiement annulé.",
   });
 };
+
+/* =====================================================
+   PAYPAL — ACHAT IMMÉDIAT (SINGLE)
+===================================================== */
+export const createPayPalOrderSingle = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    const product = await prisma.product.findUnique({
+      where: { id: Number(productId) },
+    });
+
+    if (!product) {
+      return res.render("error", { message: "Produit introuvable." });
+    }
+
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+
+    request.requestBody({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "EUR",
+            value: product.price.toFixed(2),
+          },
+          description: product.name,
+        },
+      ],
+      application_context: {
+        brand_name: "TrendyShop",
+        user_action: "PAY_NOW",
+        return_url: `${BASE_URL}/checkout/paypal-single-success`,
+        cancel_url: `${BASE_URL}/checkout/paypal-single-cancel`,
+      },
+    });
+
+    const order = await paypalClient.execute(request);
+    const approveLink = order.result.links.find((l) => l.rel === "approve");
+
+    res.redirect(approveLink.href);
+  } catch (error) {
+    console.error("PayPal Single ERROR:", error);
+    res.render("error", { message: "Erreur PayPal." });
+  }
+};
+
+export const paypalSingleSuccess = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    const request = new paypal.orders.OrdersCaptureRequest(token);
+    request.requestBody({});
+
+    await paypalClient.execute(request);
+
+    res.render("checkout/success", {
+      message: "🎉 Paiement PayPal réussi !",
+    });
+  } catch (error) {
+    console.error("PayPal Single Capture ERROR:", error);
+    res.render("error", { message: "Erreur PayPal." });
+  }
+};
+
+export const paypalSingleCancel = (req, res) => {
+  res.render("checkout/cancel", {
+    message: "⚠️ Paiement PayPal annulé.",
+  });
+};

@@ -3,43 +3,53 @@ import {
   checkoutSingle,
   checkoutSingleProduct,
   checkoutCart,
-  processCartCheckout,
   createCheckoutSession,
   paymentSuccess,
   paymentCancel,
+
+  // PayPal panier
   createPayPalOrder,
   paypalSuccess,
   paypalCancel,
+
+  // PayPal achat immédiat
   createPayPalOrderSingle,
-  paypalSuccessSingle,
-  paypalCancelSingle,
-  paypalSingleStart,
+  paypalSingleSuccess,
+  paypalSingleCancel,
 } from "../controllers/checkoutController.js";
 
 const router = express.Router();
 
-// Achat immédiat
+/* ==========================
+   ACHAT IMMÉDIAT (STRIPE)
+========================== */
 router.post("/checkout-single", checkoutSingle);
 router.post("/checkout-single-product", checkoutSingleProduct);
 
-// Panier
+/* ==========================
+   PANIER
+========================== */
 router.get("/checkout-cart", checkoutCart);
-router.post("/process-cart", processCartCheckout);
 
-// Stripe
+/* ==========================
+   STRIPE (PANIER)
+========================== */
 router.post("/create-checkout-session", createCheckoutSession);
-
-// Résultats Stripe
 router.get("/success", paymentSuccess);
 router.get("/cancel", paymentCancel);
 
-router.get("/paypal-single", createPayPalOrderSingle);
-router.get("/paypal-single-success", paypalSuccessSingle);
-router.get("/paypal-single-cancel", paypalCancelSingle);
-router.post("/paypal-single-start", paypalSingleStart);
-
-router.get("/paypal", createPayPalOrder);
+/* ==========================
+   PAYPAL — PANIER
+========================== */
+router.post("/paypal", createPayPalOrder);
 router.get("/paypal-success", paypalSuccess);
 router.get("/paypal-cancel", paypalCancel);
+
+/* ==========================
+   PAYPAL — ACHAT IMMÉDIAT
+========================== */
+router.post("/paypal-single", createPayPalOrderSingle);
+router.get("/paypal-single-success", paypalSingleSuccess);
+router.get("/paypal-single-cancel", paypalSingleCancel);
 
 export default router;
