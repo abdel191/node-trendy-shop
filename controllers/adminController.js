@@ -78,6 +78,35 @@ export const createProduct = async (req, res) => {
 };
 
 /* ======================
+   FORMULAIRE EDIT PRODUCT
+====================== */
+export const editProductForm = async (req, res) => {
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { category: true },
+    });
+
+    if (!product) {
+      return res.render("error", { message: "Produit introuvable" });
+    }
+
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    res.render("admin/edit", {
+      user: req.session.user,
+      product,
+      categories,
+    });
+  } catch (error) {
+    console.error("editProductForm ERROR:", error);
+    res.render("error", { message: "Erreur chargement produit" });
+  }
+};
+
+/* ======================
    UPDATE PRODUCT (UPLOAD OPTIONNEL)
 ====================== */
 export const updateProduct = async (req, res) => {
@@ -291,6 +320,19 @@ export const adminStats = async (req, res) => {
     });
   }
 };
+
+/* ======================
+   FORMULAIRE CREATE CATEGORY
+====================== */
+export const createCategoryForm = async (req, res) => {
+  res.render("admin/categories", {
+    user: req.session.user,
+    categories: await prisma.category.findMany({
+      orderBy: { name: "asc" },
+    }),
+  });
+};
+
 /* ==========================
    CATEGORIES
 ========================== */
