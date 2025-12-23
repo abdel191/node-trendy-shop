@@ -1,114 +1,99 @@
-// services/email.service.js
 import transporter from "../lib/mailer.js";
 
-const FROM = process.env.MAIL_FROM || '"TrendyShop" <trendyshop340@gmail.com>';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "trendyshop340@gmail.com";
+const BASE_URL = process.env.BASE_URL;
 
-/* ==============================
-   EMAIL CLIENT (commande)
-============================== */
-export const sendClientOrderEmail = async ({ to, name, orderId, total }) => {
-  if (!to) return;
+/* =====================================================
+   RESET PASSWORD
+===================================================== */
+export const sendResetPasswordEmail = async (email, token) => {
+  const resetLink = `${BASE_URL}/password/reset/${token}`;
 
   await transporter.sendMail({
-    from: FROM,
-    to,
-    subject: "✅ Confirmation de votre commande",
+    from: '"TrendyShop" <no-reply@trendyshop.it.com>',
+    to: email,
+    subject: "🔐 Réinitialisation de votre mot de passe",
     html: `
-      <h2>Merci ${name || "Client"} 🙏</h2>
-      <p>Votre commande <strong>#${orderId}</strong> a bien été confirmée.</p>
-      <p><strong>Total :</strong> €${Number(total).toFixed(2)}</p>
-      <p>Nous vous contacterons pour la livraison.</p>
-      <p>— TrendyShop</p>
+      <h2>Réinitialisation du mot de passe</h2>
+      <p>Cliquez sur le lien ci-dessous :</p>
+      <a href="${resetLink}">Réinitialiser mon mot de passe</a>
     `,
   });
 };
 
-/* ==============================
-   EMAIL ADMIN (nouvelle commande)
-============================== */
-export const sendAdminOrderEmail = async ({
-  orderId,
-  total,
-  customerName,
-  customerEmail,
-}) => {
-  if (!ADMIN_EMAIL) return;
+/* =====================================================
+   CONFIRMATION COMPTE
+===================================================== */
+export const sendConfirmationEmail = async (email, token) => {
+  const confirmLink = `${BASE_URL}/confirm/${token}`;
 
   await transporter.sendMail({
-    from: FROM,
-    to: ADMIN_EMAIL,
-    subject: "🛒 Nouvelle commande reçue",
+    from: '"TrendyShop" <no-reply@trendyshop.it.com>',
+    to: email,
+    subject: "✅ Confirmez votre compte",
+    html: `
+      <h2>Bienvenue sur TrendyShop 🎉</h2>
+      <a href="${confirmLink}">Confirmer mon compte</a>
+    `,
+  });
+};
+
+/* =====================================================
+   EMAIL CONTACT
+===================================================== */
+export const sendContactEmail = async ({ name, email, message }) => {
+  await transporter.sendMail({
+    from: `"${name}" <${email}>`,
+    to: process.env.CONTACT_EMAIL,
+    subject: "📩 Nouveau message de contact",
+    html: `
+      <p><strong>Nom :</strong> ${name}</p>
+      <p><strong>Email :</strong> ${email}</p>
+      <p>${message}</p>
+    `,
+  });
+};
+
+/* =====================================================
+   EMAIL CLIENT — COMMANDE
+===================================================== */
+export const sendClientOrderEmail = async ({ email, orderId, total }) => {
+  const orderLink = `${BASE_URL}/dashboard/orders/${orderId}`;
+
+  await transporter.sendMail({
+    from: '"TrendyShop" <orders@trendyshop.it.com>',
+    to: email,
+    subject: "🛒 Confirmation de votre commande",
+    html: `
+      <h2>Merci pour votre commande 🎉</h2>
+      <p>Numéro de commande : <strong>#${orderId}</strong></p>
+      <p>Total : <strong>${total} €</strong></p>
+      <a href="${orderLink}">Voir ma commande</a>
+    `,
+  });
+};
+
+/* =====================================================
+   EMAIL ADMIN — NOUVELLE COMMANDE
+===================================================== */
+export const sendAdminOrderEmail = async ({
+  orderId,
+  customerName,
+  customerEmail,
+  total,
+}) => {
+  const adminLink = `${BASE_URL}/admin/orders/${orderId}`;
+
+  await transporter.sendMail({
+    from: '"TrendyShop" <orders@trendyshop.it.com>',
+    to: process.env.ADMIN_EMAIL,
+    subject: "📦 Nouvelle commande reçue",
     html: `
       <h2>Nouvelle commande</h2>
       <p><strong>Commande :</strong> #${orderId}</p>
-      <p><strong>Client :</strong> ${customerName || ""}</p>
-      <p><strong>Email :</strong> ${customerEmail || ""}</p>
-      <p><strong>Total :</strong> €${Number(total).toFixed(2)}</p>
-      <p><a href="http://localhost:3007/admin">Voir dans le dashboard</a></p>
-    `,
-  });
-};
-
-/* ==============================
-   EMAIL RESET MOT DE PASSE
-============================== */
-export const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
-  if (!to || !resetUrl) return;
-
-  await transporter.sendMail({
-    from: FROM,
-    to,
-    subject: "🔐 Réinitialisation de votre mot de passe",
-    html: `
-      <p>Bonjour ${name || "Client"},</p>
-      <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>
-      <p><a href="${resetUrl}">${resetUrl}</a></p>
-      <p>Ce lien expire dans 30 minutes.</p>
-      <p>— TrendyShop</p>
-    `,
-  });
-};
-
-/* ==============================
-   EMAIL CONFIRMATION CHANGEMENT MDP
-============================== */
-export const sendPasswordChangedEmail = async ({ to, name }) => {
-  if (!to) return;
-
-  await transporter.sendMail({
-    from: FROM,
-    to,
-    subject: "🔐 Mot de passe modifié",
-    html: `
-      <h2>Mot de passe modifié 🔐</h2>
-      <p>Bonjour ${name || "Client"},</p>
-      <p>Votre mot de passe a été modifié avec succès.</p>
-      <p>Si vous n'êtes pas à l'origine de ce changement, contactez-nous immédiatement.</p>
-      <br/>
-      <p>— L'équipe TrendyShop</p>
-    `,
-  });
-};
-
-/* ==============================
-   EMAIL CONTACT (footer)
-============================== */
-export const sendContactEmail = async ({ fromEmail, message }) => {
-  if (!fromEmail || !message) return;
-
-  await transporter.sendMail({
-    from: FROM,
-    to: ADMIN_EMAIL,
-    replyTo: fromEmail, // ✅ le “répondre” arrive au client
-    subject: "📩 Nouveau message depuis le site",
-    html: `
-      <h2>Nouveau message client</h2>
-      <p><strong>Email :</strong> ${fromEmail}</p>
-      <p><strong>Message :</strong></p>
-      <p>${String(message).replace(/\n/g, "<br/>")}</p>
-      <br/>
-      <p>— TrendyShop</p>
+      <p><strong>Client :</strong> ${customerName}</p>
+      <p><strong>Email :</strong> ${customerEmail}</p>
+      <p><strong>Total :</strong> ${total} €</p>
+      <a href="${adminLink}">Voir la commande</a>
     `,
   });
 };

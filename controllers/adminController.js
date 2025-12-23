@@ -53,20 +53,19 @@ export const createProduct = async (req, res) => {
   try {
     const { name, price, description, stock, categoryId } = req.body;
 
-    let imageUrl = null;
-    if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+    if (!req.file) {
+      return res.render("error", { message: "Image requise" });
     }
 
     await prisma.product.create({
       data: {
         name,
         price: Number(price),
-        description, // ✅ AJOUTÉ
+        description,
         stock: Number(stock),
-        imageUrl: `/uploads/${req.file.filename}`,
+        imageUrl: req.file.path, // ✅ CLOUDINARY
         category: {
-          connect: { id: Number(categoryId) }, // ✅ ICI
+          connect: { id: Number(categoryId) },
         },
       },
     });
@@ -75,29 +74,6 @@ export const createProduct = async (req, res) => {
   } catch (error) {
     console.error("createProduct ERROR:", error);
     res.render("error", { message: "Erreur création produit" });
-  }
-};
-
-/* ======================
-   EDIT PRODUCT FORM
-====================== */
-export const editProductForm = async (req, res) => {
-  try {
-    const product = await prisma.product.findUnique({
-      where: { id: Number(req.params.id) },
-    });
-
-    if (!product) {
-      return res.render("error", { message: "Produit introuvable" });
-    }
-
-    res.render("admin/edit", {
-      user: req.session.user,
-      product,
-    });
-  } catch (error) {
-    console.error("editProductForm ERROR:", error);
-    res.render("error", { message: "Erreur chargement produit" });
   }
 };
 

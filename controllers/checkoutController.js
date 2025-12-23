@@ -9,6 +9,9 @@ dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const prisma = new PrismaClient();
 
+// 🌍 URL DU SITE (Render / Prod)
+const BASE_URL = process.env.BASE_URL;
+
 /* =====================================================
    AFFICHAGE ACHAT IMMÉDIAT
 ===================================================== */
@@ -36,7 +39,7 @@ export const checkoutSingle = async (req, res) => {
 };
 
 /* =====================================================
-   TRAITEMENT FORMULAIRE ACHAT IMMÉDIAT (STRIPE)
+   STRIPE — ACHAT IMMÉDIAT
 ===================================================== */
 export const checkoutSingleProduct = async (req, res) => {
   try {
@@ -53,42 +56,32 @@ export const checkoutSingleProduct = async (req, res) => {
       country,
     } = req.body;
 
-    if (
-      !id ||
-      !name ||
-      !price ||
-      !customerName ||
-      !email ||
-      !address ||
-      !city ||
-      !postalCode ||
-      !country
-    ) {
+    if (!id || !name || !price || !customerName || !email) {
       return res.render("error", { message: "Champs manquants." });
     }
 
     const userId = req.session.user?.id || null;
 
-    const lineItem = {
-      price_data: {
-        currency: "eur",
-        product_data: { name },
-        unit_amount: Math.round(parseFloat(price) * 100),
-      },
-      quantity: Number(quantity) || 1,
-    };
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: [lineItem],
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: { name },
+            unit_amount: Math.round(price * 100),
+          },
+          quantity: Number(quantity) || 1,
+        },
+      ],
       customer_email: email,
-      success_url: "http://localhost:3007/checkout/success",
-      cancel_url: "http://localhost:3007/checkout/cancel",
+      success_url: `${BASE_URL}/checkout/success`,
+      cancel_url: `${BASE_URL}/checkout/cancel`,
       metadata: {
-        userId: userId ? String(userId) : "",
         checkoutType: "single",
         productId: String(id),
+        userId: userId ? String(userId) : "",
         customerName,
         address,
         city,
@@ -99,7 +92,7 @@ export const checkoutSingleProduct = async (req, res) => {
 
     res.redirect(session.url);
   } catch (error) {
-    console.error("checkoutSingleProduct ERROR:", error);
+    console.error("Stripe Single ERROR:", error);
     res.render("error", { message: "Erreur Stripe." });
   }
 };
@@ -125,10 +118,7 @@ export const checkoutCart = async (req, res) => {
       0
     );
 
-    res.render("checkout/cart", {
-      cartItems: cart.items,
-      total,
-    });
+    res.render("checkout/cart", { cartItems: cart.items, total });
   } catch (error) {
     console.error("checkoutCart ERROR:", error);
     res.render("error", { message: "Erreur interne." });
@@ -136,20 +126,10 @@ export const checkoutCart = async (req, res) => {
 };
 
 /* =====================================================
-   TRAITEMENT FORMULAIRE PANIER
+   STRIPE — PANIER
 ===================================================== */
-export const processCartCheckout = async (req, res) => {
+export const createCheckoutSession = async (req, res) => {
   try {
-    const { name, address, city, zip } = req.body;
-
-    if (!name || !address || !city || !zip) {
-      return res.render("error", {
-        message: "Veuillez remplir tous les champs.",
-      });
-    }
-
-    req.session.checkoutCustomer = { name, address, city, zip };
-
     const sessionId = req.cookies.sessionId;
 
     const cart = await prisma.cart.findFirst({
@@ -161,79 +141,27 @@ export const processCartCheckout = async (req, res) => {
       return res.render("error", { message: "Panier vide." });
     }
 
-    const totalAmount = cart.items.reduce(
-      (sum, i) => sum + i.product.price * i.quantity,
-      0
-    );
-
-    res.render("checkout/confirm", {
-      cartItems: cart.items,
-      totalAmount,
-      customer: req.session.checkoutCustomer,
-    });
-  } catch (error) {
-    console.error("processCartCheckout ERROR:", error);
-    res.render("error", { message: "Erreur interne." });
-  }
-};
-
-/* =====================================================
-   CRÉATION SESSION STRIPE (PANIER + SINGLE)
-===================================================== */
-export const createCheckoutSession = async (req, res) => {
-  try {
-    const userId = req.session.user?.id || null;
-    let items = [];
-
-    if (req.session.singleProduct) {
-      const p = req.session.singleProduct;
-      items.push({
-        price_data: {
-          currency: "eur",
-          product_data: { name: p.name },
-          unit_amount: Math.round(p.price * 100),
-        },
-        quantity: p.quantity,
-      });
-    } else {
-      const sessionId = req.cookies.sessionId;
-
-      const cart = await prisma.cart.findFirst({
-        where: { sessionId },
-        include: { items: { include: { product: true } } },
-      });
-
-      if (!cart || cart.items.length === 0) {
-        return res.render("error", { message: "Panier vide." });
-      }
-
-      cart.items.forEach((i) => {
-        items.push({
-          price_data: {
-            currency: "eur",
-            product_data: { name: i.product.name },
-            unit_amount: Math.round(i.product.price * 100),
-          },
-          quantity: i.quantity,
-        });
-      });
-    }
+    const items = cart.items.map((i) => ({
+      price_data: {
+        currency: "eur",
+        product_data: { name: i.product.name },
+        unit_amount: Math.round(i.product.price * 100),
+      },
+      quantity: i.quantity,
+    }));
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
       line_items: items,
-      success_url: "http://localhost:3007/checkout/success",
-      cancel_url: "http://localhost:3007/checkout/cancel",
-      metadata: {
-        userId: userId ? String(userId) : "",
-        checkoutType: req.session.singleProduct ? "single" : "cart",
-      },
+      success_url: `${BASE_URL}/checkout/success`,
+      cancel_url: `${BASE_URL}/checkout/cancel`,
+      metadata: { checkoutType: "cart" },
     });
 
     res.redirect(session.url);
   } catch (error) {
-    console.error("Stripe ERROR:", error);
+    console.error("Stripe Cart ERROR:", error);
     res.render("error", { message: "Erreur Stripe." });
   }
 };
@@ -244,7 +172,6 @@ export const createCheckoutSession = async (req, res) => {
 export const createPayPalOrder = async (req, res) => {
   try {
     const sessionId = req.cookies.sessionId;
-    const userId = req.session.user?.id || null;
 
     const cart = await prisma.cart.findFirst({
       where: { sessionId },
@@ -271,14 +198,13 @@ export const createPayPalOrder = async (req, res) => {
             currency_code: "EUR",
             value: total.toFixed(2),
           },
-          custom_id: userId ? String(userId) : "guest",
         },
       ],
       application_context: {
         brand_name: "TrendyShop",
         user_action: "PAY_NOW",
-        return_url: "http://localhost:3007/checkout/paypal-success",
-        cancel_url: "http://localhost:3007/checkout/paypal-cancel",
+        return_url: `${BASE_URL}/checkout/paypal-success`,
+        cancel_url: `${BASE_URL}/checkout/paypal-cancel`,
       },
     });
 
@@ -287,13 +213,13 @@ export const createPayPalOrder = async (req, res) => {
 
     res.redirect(approveLink.href);
   } catch (error) {
-    console.error("PayPal ERROR:", error);
+    console.error("PayPal Cart ERROR:", error);
     res.render("error", { message: "Erreur PayPal." });
   }
 };
 
 /* =====================================================
-   PAYPAL — PANIER SUCCESS / CANCEL
+   PAYPAL — SUCCESS / CANCEL
 ===================================================== */
 export const paypalSuccess = async (req, res) => {
   try {
@@ -303,11 +229,6 @@ export const paypalSuccess = async (req, res) => {
     request.requestBody({});
 
     await paypalClient.execute(request);
-
-    const sessionId = req.cookies.sessionId;
-    await prisma.cartItem.deleteMany({
-      where: { cart: { sessionId } },
-    });
 
     res.render("checkout/success", {
       message: "🎉 Paiement PayPal réussi !",
@@ -319,103 +240,6 @@ export const paypalSuccess = async (req, res) => {
 };
 
 export const paypalCancel = (req, res) => {
-  res.render("checkout/cancel", {
-    message: "Paiement PayPal annulé.",
-  });
-};
-
-/* =====================================================
-   PAYPAL — ACHAT IMMÉDIAT
-===================================================== */
-export const paypalSingleStart = async (req, res) => {
-  try {
-    const { productId } = req.body;
-
-    const product = await prisma.product.findUnique({
-      where: { id: Number(productId) },
-    });
-
-    if (!product) {
-      return res.render("error", { message: "Produit introuvable." });
-    }
-
-    req.session.singleProduct = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-    };
-
-    res.redirect("/checkout/paypal-single");
-  } catch (error) {
-    console.error("paypalSingleStart ERROR:", error);
-    res.render("error", { message: "Erreur PayPal." });
-  }
-};
-
-export const createPayPalOrderSingle = async (req, res) => {
-  try {
-    const product = req.session.singleProduct;
-    const userId = req.session.user?.id || null;
-
-    if (!product) {
-      return res.render("error", { message: "Aucun produit sélectionné." });
-    }
-
-    const request = new paypal.orders.OrdersCreateRequest();
-    request.prefer("return=representation");
-
-    request.requestBody({
-      intent: "CAPTURE",
-      purchase_units: [
-        {
-          amount: {
-            currency_code: "EUR",
-            value: product.price.toFixed(2),
-          },
-          description: product.name,
-          custom_id: userId ? String(userId) : "guest",
-        },
-      ],
-      application_context: {
-        brand_name: "TrendyShop",
-        user_action: "PAY_NOW",
-        return_url: "http://localhost:3007/checkout/paypal-single-success",
-        cancel_url: "http://localhost:3007/checkout/paypal-single-cancel",
-      },
-    });
-
-    const order = await paypalClient.execute(request);
-    const approveLink = order.result.links.find((l) => l.rel === "approve");
-
-    res.redirect(approveLink.href);
-  } catch (error) {
-    console.error("PayPal Single ERROR:", error);
-    res.render("error", { message: "Erreur PayPal." });
-  }
-};
-
-export const paypalSuccessSingle = async (req, res) => {
-  try {
-    const { token } = req.query;
-
-    const request = new paypal.orders.OrdersCaptureRequest(token);
-    request.requestBody({});
-
-    await paypalClient.execute(request);
-
-    req.session.singleProduct = null;
-
-    res.render("checkout/success", {
-      message: "🎉 Paiement PayPal réussi !",
-    });
-  } catch (error) {
-    console.error("PayPal Single Capture ERROR:", error);
-    res.render("error", { message: "Erreur PayPal." });
-  }
-};
-
-export const paypalCancelSingle = (req, res) => {
   res.render("checkout/cancel", {
     message: "Paiement PayPal annulé.",
   });
