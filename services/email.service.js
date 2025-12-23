@@ -9,7 +9,7 @@ export const sendResetPasswordEmail = async (email, token) => {
   const resetLink = `${BASE_URL}/password/reset/${token}`;
 
   await transporter.sendMail({
-    from: '"TrendyShop" <no-reply@trendyshop.it.com>',
+    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
     to: email,
     subject: "🔐 Réinitialisation de votre mot de passe",
     html: `
@@ -21,17 +21,34 @@ export const sendResetPasswordEmail = async (email, token) => {
 };
 
 /* =====================================================
+   PASSWORD CHANGED ✅ (EXPORT MANQUANT AVANT)
+===================================================== */
+export const sendPasswordChangedEmail = async (email) => {
+  await transporter.sendMail({
+    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
+    to: email,
+    subject: "✅ Mot de passe modifié",
+    html: `
+      <h2>Mot de passe modifié</h2>
+      <p>Votre mot de passe a été changé avec succès.</p>
+      <p>Si ce n’était pas vous, contactez-nous immédiatement.</p>
+    `,
+  });
+};
+
+/* =====================================================
    CONFIRMATION COMPTE
 ===================================================== */
 export const sendConfirmationEmail = async (email, token) => {
   const confirmLink = `${BASE_URL}/confirm/${token}`;
 
   await transporter.sendMail({
-    from: '"TrendyShop" <no-reply@trendyshop.it.com>',
+    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
     to: email,
     subject: "✅ Confirmez votre compte",
     html: `
       <h2>Bienvenue sur TrendyShop 🎉</h2>
+      <p>Veuillez confirmer votre compte :</p>
       <a href="${confirmLink}">Confirmer mon compte</a>
     `,
   });
@@ -42,7 +59,7 @@ export const sendConfirmationEmail = async (email, token) => {
 ===================================================== */
 export const sendContactEmail = async ({ name, email, message }) => {
   await transporter.sendMail({
-    from: `"${name}" <${email}>`,
+    from: `"${name}" <${process.env.CONTACT_EMAIL}>`,
     to: process.env.CONTACT_EMAIL,
     subject: "📩 Nouveau message de contact",
     html: `
@@ -60,12 +77,12 @@ export const sendClientOrderEmail = async ({ email, orderId, total }) => {
   const orderLink = `${BASE_URL}/dashboard/orders/${orderId}`;
 
   await transporter.sendMail({
-    from: '"TrendyShop" <orders@trendyshop.it.com>',
+    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
     to: email,
     subject: "🛒 Confirmation de votre commande",
     html: `
       <h2>Merci pour votre commande 🎉</h2>
-      <p>Numéro de commande : <strong>#${orderId}</strong></p>
+      <p>Commande n° <strong>#${orderId}</strong></p>
       <p>Total : <strong>${total} €</strong></p>
       <a href="${orderLink}">Voir ma commande</a>
     `,
@@ -84,7 +101,7 @@ export const sendAdminOrderEmail = async ({
   const adminLink = `${BASE_URL}/admin/orders/${orderId}`;
 
   await transporter.sendMail({
-    from: '"TrendyShop" <orders@trendyshop.it.com>',
+    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
     to: process.env.ADMIN_EMAIL,
     subject: "📦 Nouvelle commande reçue",
     html: `
