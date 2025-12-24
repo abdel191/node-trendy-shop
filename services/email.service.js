@@ -1,68 +1,46 @@
-import transporter from "../lib/mailer.js";
+import fetch from "node-fetch";
 
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BASE_URL = process.env.BASE_URL;
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
-/* =====================================================
-   RESET PASSWORD
-===================================================== */
-export const sendResetPasswordEmail = async (email, token) => {
-  const resetLink = `${BASE_URL}/password/reset/${token}`;
+const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
 
-  await transporter.sendMail({
-    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
-    to: email,
-    subject: "🔐 Réinitialisation de votre mot de passe",
-    html: `
-      <h2>Réinitialisation du mot de passe</h2>
-      <p>Cliquez sur le lien ci-dessous :</p>
-      <a href="${resetLink}">Réinitialiser mon mot de passe</a>
-    `,
+const sendEmail = async ({ to, subject, html }) => {
+  const res = await fetch(BREVO_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "api-key": BREVO_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "TrendyShop",
+        email: "no-reply@trendyshop.com",
+      },
+      to: Array.isArray(to) ? to : [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
   });
+
+  if (!res.ok) {
+    const error = await res.text();
+    console.error("BREVO ERROR:", error);
+    throw new Error("Erreur envoi email");
+  }
 };
 
 /* =====================================================
-   PASSWORD CHANGED ✅ (EXPORT MANQUANT AVANT)
-===================================================== */
-export const sendPasswordChangedEmail = async (email) => {
-  await transporter.sendMail({
-    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
-    to: email,
-    subject: "✅ Mot de passe modifié",
-    html: `
-      <h2>Mot de passe modifié</h2>
-      <p>Votre mot de passe a été changé avec succès.</p>
-      <p>Si ce n’était pas vous, contactez-nous immédiatement.</p>
-    `,
-  });
-};
-
-/* =====================================================
-   CONFIRMATION COMPTE
-===================================================== */
-export const sendConfirmationEmail = async (email, token) => {
-  const confirmLink = `${BASE_URL}/confirm/${token}`;
-
-  await transporter.sendMail({
-    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
-    to: email,
-    subject: "✅ Confirmez votre compte",
-    html: `
-      <h2>Bienvenue sur TrendyShop 🎉</h2>
-      <p>Veuillez confirmer votre compte :</p>
-      <a href="${confirmLink}">Confirmer mon compte</a>
-    `,
-  });
-};
-
-/* =====================================================
-   EMAIL CONTACT
+   CONTACT
 ===================================================== */
 export const sendContactEmail = async ({ name, email, message }) => {
-  await transporter.sendMail({
-    from: `"${name}" <${process.env.CONTACT_EMAIL}>`,
-    to: process.env.CONTACT_EMAIL,
+  await sendEmail({
+    to: CONTACT_EMAIL,
     subject: "📩 Nouveau message de contact",
     html: `
+      <h2>Nouveau message de contact</h2>
       <p><strong>Nom :</strong> ${name}</p>
       <p><strong>Email :</strong> ${email}</p>
       <p>${message}</p>
@@ -71,20 +49,67 @@ export const sendContactEmail = async ({ name, email, message }) => {
 };
 
 /* =====================================================
+   RESET PASSWORD
+===================================================== */
+export const sendResetPasswordEmail = async (email, token) => {
+  const resetLink = `${BASE_URL}/password/reset/${token}`;
+
+  await sendEmail({
+    to: email,
+    subject: "🔐 Réinitialisation de votre mot de passe",
+    html: `
+      <h2>Mot de passe oublié</h2>
+      <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>
+      <a href="${resetLink}">${resetLink}</a>
+      <p>Si vous n’êtes pas à l’origine de cette demande, ignorez cet email.</p>
+    `,
+  });
+};
+
+/* =====================================================
+   PASSWORD CHANGÉ
+===================================================== */
+export const sendPasswordChangedEmail = async (email) => {
+  await sendEmail({
+    to: email,
+    subject: "✅ Mot de passe modifié",
+    html: `
+      <h2>Mot de passe modifié</h2>
+      <p>Votre mot de passe a été modifié avec succès.</p>
+      <p>Si ce n’est pas vous, contactez immédiatement le support.</p>
+    `,
+  });
+};
+
+/* =====================================================
+   CONFIRMATION DE COMPTE
+===================================================== */
+export const sendConfirmationEmail = async (email, token) => {
+  const confirmLink = `${BASE_URL}/confirm/${token}`;
+
+  await sendEmail({
+    to: email,
+    subject: "✅ Confirmez votre compte TrendyShop",
+    html: `
+      <h2>Bienvenue sur TrendyShop 🎉</h2>
+      <p>Veuillez confirmer votre compte en cliquant ci-dessous :</p>
+      <a href="${confirmLink}">${confirmLink}</a>
+    `,
+  });
+};
+
+/* =====================================================
    EMAIL CLIENT — COMMANDE
 ===================================================== */
 export const sendClientOrderEmail = async ({ email, orderId, total }) => {
-  const orderLink = `${BASE_URL}/dashboard/orders/${orderId}`;
-
-  await transporter.sendMail({
-    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
+  await sendEmail({
     to: email,
     subject: "🛒 Confirmation de votre commande",
     html: `
       <h2>Merci pour votre commande 🎉</h2>
-      <p>Commande n° <strong>#${orderId}</strong></p>
-      <p>Total : <strong>${total} €</strong></p>
-      <a href="${orderLink}">Voir ma commande</a>
+      <p><strong>Commande :</strong> #${orderId}</p>
+      <p><strong>Total :</strong> ${total} €</p>
+      <p>Nous vous tiendrons informé de l’expédition.</p>
     `,
   });
 };
@@ -98,11 +123,8 @@ export const sendAdminOrderEmail = async ({
   customerEmail,
   total,
 }) => {
-  const adminLink = `${BASE_URL}/admin/orders/${orderId}`;
-
-  await transporter.sendMail({
-    from: `"TrendyShop" <${process.env.CONTACT_EMAIL}>`,
-    to: process.env.ADMIN_EMAIL,
+  await sendEmail({
+    to: ADMIN_EMAIL,
     subject: "📦 Nouvelle commande reçue",
     html: `
       <h2>Nouvelle commande</h2>
@@ -110,7 +132,6 @@ export const sendAdminOrderEmail = async ({
       <p><strong>Client :</strong> ${customerName}</p>
       <p><strong>Email :</strong> ${customerEmail}</p>
       <p><strong>Total :</strong> ${total} €</p>
-      <a href="${adminLink}">Voir la commande</a>
     `,
   });
 };

@@ -6,6 +6,8 @@ import {
   sendPasswordChangedEmail,
 } from "../services/email.service.js";
 
+const BASE_URL = process.env.BASE_URL;
+
 /* ===============================
    FORM MOT DE PASSE OUBLIÉ
 ================================ */
@@ -39,7 +41,7 @@ export const forgotPasswordSubmit = async (req, res) => {
       },
     });
 
-    const resetUrl = `http://localhost:3007/reset-password/${token}`;
+    const resetUrl = `${BASE_URL}/reset-password/${token}`;
 
     await sendResetPasswordEmail({
       to: user.email,
@@ -108,7 +110,7 @@ export const resetPasswordSubmit = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await prisma.user.update({
-      where: { id: user.id }, // ✅ ICI user EXISTE
+      where: { id: user.id },
       data: {
         password: hashedPassword,
         resetToken: null,
