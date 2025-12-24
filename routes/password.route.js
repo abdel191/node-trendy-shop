@@ -13,7 +13,7 @@ router.get("/forgot", forgotPasswordForm);
 router.post("/forgot", forgotPasswordSubmit);
 
 // Reset mot de passe
-router.get("/reset/:token", resetPasswordForm);
-router.post("/reset/:token", resetPasswordSubmit);
+router.get("/reset-password/:token", resetPasswordForm);
+router.post("/reset-password/:token", resetPasswordSubmit);
 
 export default router;

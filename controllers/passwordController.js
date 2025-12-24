@@ -6,6 +6,8 @@ import {
   sendPasswordChangedEmail,
 } from "../services/email.service.js";
 
+const BASE_URL = process.env.BASE_URL;
+
 /* ===============================
    FORM MOT DE PASSE OUBLIÉ
 ================================ */
@@ -29,7 +31,7 @@ export const forgotPasswordSubmit = async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+    const expires = new Date(Date.now() + 30 * 60 * 1000);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -39,10 +41,12 @@ export const forgotPasswordSubmit = async (req, res) => {
       },
     });
 
+    const resetUrl = `${BASE_URL}/reset-password/${token}`;
+
+    // ✅ APPEL CORRECT
     await sendResetPasswordEmail({
       to: user.email,
-      name: user.name,
-      token,
+      resetUrl,
     });
 
     res.render("password/forgot", {
@@ -114,9 +118,9 @@ export const resetPasswordSubmit = async (req, res) => {
       },
     });
 
+    // ✅ APPEL CORRECT
     await sendPasswordChangedEmail({
       to: user.email,
-      name: user.name,
     });
 
     res.redirect("/connexion");

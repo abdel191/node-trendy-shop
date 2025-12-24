@@ -4,19 +4,21 @@ export const submitContactForm = async (req, res) => {
   try {
     const { email, message } = req.body;
 
+    // 🔐 Validation simple
     if (!email || !message) {
       req.flash("error", "Tous les champs sont obligatoires.");
-      return res.redirect("back");
+      return res.redirect(req.get("referer") || "/");
     }
 
+    // ✅ Envoi email via Brevo
     await sendContactEmail({
-      name: "Client TrendyShop", // ou req.body.name si tu ajoutes un champ
+      name: "Client TrendyShop",
       email,
       message,
     });
 
     req.flash("success", "Votre message a bien été envoyé ✅");
-    res.redirect("/");
+    return res.redirect("/");
   } catch (error) {
     console.error("Contact ERROR:", error);
 
@@ -24,6 +26,6 @@ export const submitContactForm = async (req, res) => {
       "error",
       "Erreur lors de l’envoi du message. Réessayez plus tard."
     );
-    res.redirect(req.get("referer") || "/");
+    return res.redirect(req.get("referer") || "/");
   }
 };
