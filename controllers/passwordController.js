@@ -41,7 +41,7 @@ export const forgotPasswordSubmit = async (req, res) => {
       },
     });
 
-    const resetUrl = `${BASE_URL}/reset-password/${token}`;
+    const resetUrl = `${BASE_URL}/reset/password/${token}`;
 
     // ✅ APPEL CORRECT
     await sendResetPasswordEmail({
