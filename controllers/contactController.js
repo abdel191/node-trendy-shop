@@ -10,7 +10,8 @@ export const submitContactForm = async (req, res) => {
     }
 
     await sendContactEmail({
-      fromEmail: email,
+      name: "Client TrendyShop", // ou req.body.name si tu ajoutes un champ
+      email,
       message,
     });
 
@@ -18,10 +19,11 @@ export const submitContactForm = async (req, res) => {
     res.redirect("/");
   } catch (error) {
     console.error("Contact ERROR:", error);
+
     req.flash(
       "error",
       "Erreur lors de l’envoi du message. Réessayez plus tard."
     );
-    return res.redirect(req.get("referer") || "/");
+    res.redirect(req.get("referer") || "/");
   }
 };

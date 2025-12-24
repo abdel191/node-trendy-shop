@@ -6,8 +6,6 @@ import {
   sendPasswordChangedEmail,
 } from "../services/email.service.js";
 
-const BASE_URL = process.env.BASE_URL;
-
 /* ===============================
    FORM MOT DE PASSE OUBLIÉ
 ================================ */
@@ -41,12 +39,10 @@ export const forgotPasswordSubmit = async (req, res) => {
       },
     });
 
-    const resetUrl = `${BASE_URL}/reset-password/${token}`;
-
     await sendResetPasswordEmail({
       to: user.email,
       name: user.name,
-      resetUrl,
+      token,
     });
 
     res.render("password/forgot", {
