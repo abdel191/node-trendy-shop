@@ -106,6 +106,12 @@ export const resetPasswordSubmit = async (req, res) => {
         token: null,
       });
     }
+    if (req.body.password !== req.body.confirmPassword) {
+      return res.render("password/reset", {
+        error: "Les mots de passe ne correspondent pas.",
+        token: req.params.token,
+      });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
