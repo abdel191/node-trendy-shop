@@ -165,6 +165,29 @@ export const createCheckoutSession = async (req, res) => {
     res.render("error", { message: "Erreur Stripe." });
   }
 };
+/* =====================================================
+   TRAITEMENT FORMULAIRE PANIER (CONFIRMATION)
+===================================================== */
+export const processCartCheckout = async (req, res) => {
+  try {
+    const { name, address, city, zip } = req.body;
+
+    if (!name || !address || !city || !zip) {
+      return res.render("error", {
+        message: "Veuillez remplir tous les champs.",
+      });
+    }
+
+    // Stocke les infos client en session pour les réutiliser au checkout
+    req.session.checkoutCustomer = { name, address, city, zip };
+
+    // Redirige vers la page panier ou confirmation (selon ton flow)
+    return res.redirect("/checkout/checkout-cart");
+  } catch (error) {
+    console.error("processCartCheckout ERROR:", error);
+    res.render("error", { message: "Erreur interne." });
+  }
+};
 
 /* =====================================================
    PAYPAL — PANIER
@@ -261,18 +284,37 @@ export const paymentCancel = (req, res) => {
 };
 
 /* =====================================================
+   PAYPAL — START SINGLE (stocke productId en session puis redirige)
+===================================================== */
+export const paypalSingleStart = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    if (!productId) {
+      return res.render("error", { message: "Produit manquant." });
+    }
+
+    // On stocke le produit dans la session pour pouvoir faire un GET ensuite
+    req.session.paypalSingleProductId = Number(productId);
+
+    // On redirige vers une route GET qui crée l'order PayPal et redirect vers PayPal
+    return res.redirect("/checkout/paypal-single");
+  } catch (error) {
+    console.error("paypalSingleStart ERROR:", error);
+    res.render("error", { message: "Erreur PayPal." });
+  }
+};
+
+/* =====================================================
    PAYPAL — ACHAT IMMÉDIAT (SINGLE)
 ===================================================== */
 export const createPayPalOrderSingle = async (req, res) => {
   try {
-    const { productId } = req.body;
+    // productId vient de la session (set par paypalSingleStart)
+    const productId = req.session.paypalSingleProductId;
 
-    const product = await prisma.product.findUnique({
-      where: { id: Number(productId) },
-    });
-
-    if (!product) {
-      return res.render("error", { message: "Produit introuvable." });
+    if (!productId) {
+      return res.render("error", { message: "Aucun produit sélectionné." });
     }
 
     const request = new paypal.orders.OrdersCreateRequest();
@@ -308,6 +350,8 @@ export const createPayPalOrderSingle = async (req, res) => {
 };
 
 export const paypalSingleSuccess = async (req, res) => {
+  req.session.paypalSingleProductId = null;
+
   try {
     const { token } = req.query;
 
@@ -326,6 +370,8 @@ export const paypalSingleSuccess = async (req, res) => {
 };
 
 export const paypalSingleCancel = (req, res) => {
+  req.session.paypalSingleProductId = null;
+
   res.render("checkout/cancel", {
     message: "⚠️ Paiement PayPal annulé.",
   });

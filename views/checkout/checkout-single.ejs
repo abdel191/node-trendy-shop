@@ -9,7 +9,7 @@
       rel="stylesheet"
     />
   </head>
- <%- include("../partials/header") %>
+  <%- include("../partials/header") %>
   <body class="bg-gray-100 pb-16">
     <div class="container mx-auto px-4 py-10">
       <h1 class="text-3xl font-bold text-center mb-8">
@@ -109,15 +109,15 @@
             >
               Procéder au paiement →
             </button>
+          </form>
 
-            <form action="/checkout/paypal-single-start" method="POST">
-              <input type="hidden" name="productId" value="<%= product.id %>" />
-              <button
-                class="bg-yellow-500 text-white py-2 px-4 rounded mt-4 w-full"
-              >
-                Payer avec PayPal
-              </button>
-            </form>
+          <form action="/checkout/paypal-single-start" method="POST">
+            <input type="hidden" name="productId" value="<%= product.id %>" />
+            <button
+              class="bg-yellow-500 text-white py-2 px-4 rounded mt-4 w-full"
+            >
+              Payer avec PayPal
+            </button>
           </form>
 
           <a
