@@ -178,14 +178,45 @@ export const processCartCheckout = async (req, res) => {
       });
     }
 
-    // Stocke les infos client en session pour les réutiliser au checkout
-    req.session.checkoutCustomer = { name, address, city, zip };
+    const sessionId = req.cookies.sessionId;
 
-    // Redirige vers la page panier ou confirmation (selon ton flow)
-    return res.redirect("/checkout/checkout-cart");
+    const cart = await prisma.cart.findFirst({
+      where: { sessionId },
+      include: { items: { include: { product: true } } },
+    });
+
+    if (!cart || cart.items.length === 0) {
+      return res.render("error", { message: "Panier vide." });
+    }
+
+    const items = cart.items.map((i) => ({
+      price_data: {
+        currency: "eur",
+        product_data: { name: i.product.name },
+        unit_amount: Math.round(i.product.price * 100),
+      },
+      quantity: i.quantity,
+    }));
+
+    const stripeSession = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: items,
+      success_url: `${BASE_URL}/checkout/success`,
+      cancel_url: `${BASE_URL}/checkout/cancel`,
+      metadata: {
+        checkoutType: "cart",
+        customerName: name,
+        customerAddress: address,
+        customerCity: city,
+        customerZip: zip,
+      },
+    });
+
+    return res.redirect(stripeSession.url);
   } catch (error) {
     console.error("processCartCheckout ERROR:", error);
-    res.render("error", { message: "Erreur interne." });
+    return res.render("error", { message: "Erreur Stripe (panier)." });
   }
 };
 
@@ -310,11 +341,18 @@ export const paypalSingleStart = async (req, res) => {
 ===================================================== */
 export const createPayPalOrderSingle = async (req, res) => {
   try {
-    // productId vient de la session (set par paypalSingleStart)
-    const productId = req.session.paypalSingleProductId;
+    const { productId } = req.body;
 
     if (!productId) {
-      return res.render("error", { message: "Aucun produit sélectionné." });
+      return res.render("error", { message: "Produit manquant." });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: Number(productId) },
+    });
+
+    if (!product) {
+      return res.render("error", { message: "Produit introuvable." });
     }
 
     const request = new paypal.orders.OrdersCreateRequest();
@@ -342,10 +380,10 @@ export const createPayPalOrderSingle = async (req, res) => {
     const order = await paypalClient.execute(request);
     const approveLink = order.result.links.find((l) => l.rel === "approve");
 
-    res.redirect(approveLink.href);
+    return res.redirect(approveLink.href);
   } catch (error) {
     console.error("PayPal Single ERROR:", error);
-    res.render("error", { message: "Erreur PayPal." });
+    return res.render("error", { message: "Erreur PayPal." });
   }
 };
 
