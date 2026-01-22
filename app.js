@@ -56,6 +56,42 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ================================
+// 🌍 AUTO LANG (si pas de cookie lang)
+// ================================
+const SUPPORTED_LANGS = ["fr", "en", "de", "it"];
+const DEFAULT_LANG = "fr";
+
+function detectBrowserLang(req) {
+  const header = req.headers["accept-language"];
+  if (!header) return null;
+
+  const first = header.split(",")[0]?.trim(); // ex "fr-FR"
+  if (!first) return null;
+
+  return first.split("-")[0].toLowerCase(); // ex "fr"
+}
+
+app.use((req, res, next) => {
+  // Si l'utilisateur a déjà choisi une langue → on respecte
+  const saved = req.cookies.lang;
+  if (saved && SUPPORTED_LANGS.includes(saved)) return next();
+
+  // Sinon → on détecte la langue navigateur
+  const browserLang = detectBrowserLang(req);
+  const lang = SUPPORTED_LANGS.includes(browserLang)
+    ? browserLang
+    : DEFAULT_LANG;
+
+  res.cookie("lang", lang, {
+    maxAge: 1000 * 60 * 60 * 24 * 365,
+    httpOnly: false,
+    sameSite: "lax",
+  });
+
+  next();
+});
+
+// ================================
 // 🌍 i18n CONFIG (UNE SEULE FOIS)
 // ================================
 i18n.configure({
@@ -72,7 +108,7 @@ app.use(i18n.init);
 
 // rendre i18n dispo dans TOUTES les vues
 app.use((req, res, next) => {
-  res.locals.__ = res.__;
+  res.locals.__ = res.__.bind(req);
   res.locals.currentLang = req.getLocale();
   next();
 });
@@ -92,6 +128,7 @@ app.get("/lang/:lang", (req, res) => {
     maxAge: 1000 * 60 * 60 * 24 * 365, // 1 an
     httpOnly: false,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
 
   req.setLocale(lang);
